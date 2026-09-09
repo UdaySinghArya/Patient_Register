@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { getSession, logout } from '../auth'
+import { getSession, isChemist, logout } from '../auth'
 import { IconNewEntry, IconRegister, IconReport } from '../components/NavIcons'
 
 const NAV = [
@@ -36,6 +36,7 @@ export function AppShell() {
   const dateText = todayLabel()
   const navigate = useNavigate()
   const session = getSession()
+  const navItems = isChemist() ? NAV : NAV.filter((item) => item.to !== '/entries/new')
 
   function onLogout() {
     logout()
@@ -55,7 +56,7 @@ export function AppShell() {
           </div>
         </div>
         <nav className="flex flex-col gap-1 p-3" aria-label="Main">
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -125,7 +126,7 @@ export function AppShell() {
         aria-label="Main"
       >
         <div className="flex items-stretch">
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

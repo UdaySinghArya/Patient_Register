@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RequireAuth } from './components/RequireAuth'
+import { RequireChemist } from './components/RequireChemist'
 import { AppShell } from './layouts/AppShell'
 import { TodayRegister } from './pages/TodayRegister'
 import { NewEntry } from './pages/NewEntry'
@@ -15,8 +16,10 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route element={<AppShell />}>
             <Route path="/" element={<TodayRegister />} />
-            <Route path="/entries/new" element={<NewEntry />} />
-            <Route path="/entries/:id/edit" element={<EditEntry />} />
+            <Route element={<RequireChemist />}>
+              <Route path="/entries/new" element={<NewEntry />} />
+              <Route path="/entries/:id/edit" element={<EditEntry />} />
+            </Route>
             <Route path="/report" element={<DayReport />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

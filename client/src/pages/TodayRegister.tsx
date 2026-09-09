@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { isChemist } from '../auth'
 import { StatusPanel } from '../components/StatusPanel'
 import { EntryList } from '../components/EntryList'
 import { useDayRegister } from '../hooks/useDayRegister'
@@ -25,12 +26,14 @@ export function TodayRegister() {
           <p className="font-semibold text-ink">Today's register</p>
           <p className="text-sm text-slate">{formatLongDateIST(data.date)}</p>
         </div>
-        <Link
-          to="/entries/new"
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-dark"
-        >
-          Add patient
-        </Link>
+        {isChemist() ? (
+          <Link
+            to="/entries/new"
+            className="inline-flex min-h-11 items-center justify-center rounded-md bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-dark"
+          >
+            Add patient
+          </Link>
+        ) : null}
       </div>
 
       <div className="relative overflow-hidden rounded-lg border border-hairline bg-paper p-4 shadow-sm">

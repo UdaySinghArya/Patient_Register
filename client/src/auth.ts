@@ -20,6 +20,10 @@ export function isLoggedIn() {
   return getSession() !== null
 }
 
+export function isChemist() {
+  return getSession()?.role === 'Chemist'
+}
+
 export function saveSession(user: AuthUser) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(user))
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { deleteEntry, type Entry } from '../api'
+import { isChemist } from '../auth'
 import { formatRupees, formatTimeIST } from '../lib/format'
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
 }
 
 export function EntryList({ entries, onChanged }: Props) {
+  const canEdit = isChemist()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -28,6 +30,7 @@ export function EntryList({ entries, onChanged }: Props) {
   }
 
   function Actions({ entry }: { entry: Entry }) {
+    if (!canEdit) return null
     return (
       <div className="flex items-center gap-2">
         <Link
@@ -98,7 +101,7 @@ export function EntryList({ entries, onChanged }: Props) {
               <th className="px-3 py-2.5">Medicines</th>
               <th className="px-3 py-2.5 text-right">Amount</th>
               <th className="px-3 py-2.5">Status</th>
-              <th className="px-3 py-2.5">Actions</th>
+              {canEdit ? <th className="px-3 py-2.5">Actions</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -121,9 +124,11 @@ export function EntryList({ entries, onChanged }: Props) {
                     Dispensed
                   </span>
                 </td>
-                <td className="px-3 py-3">
-                  <Actions entry={entry} />
-                </td>
+                {canEdit ? (
+                  <td className="px-3 py-3">
+                    <Actions entry={entry} />
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
