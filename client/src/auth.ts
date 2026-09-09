@@ -2,8 +2,8 @@ const SESSION_KEY = 'patient-register-session'
 export const STATIC_PIN = '0000'
 
 export const STATIC_USERS = [
-  { phone: '9876543210', role: 'Chemist', label: 'Chemist desk' },
-  { phone: '9123456780', role: 'Doctor', label: 'Doctor' },
+  { phone: '8888888888', role: 'Chemist', label: 'Chemist desk' },
+  { phone: '9999999999', role: 'Doctor', label: 'Doctor' },
 ] as const
 
 export type Session = {
