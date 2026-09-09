@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import { Entry, toEntryDto } from '../models/Entry.js';
 import { dayBoundsIST, isValidYmd, todayYmdIST } from '../utils/dates.js';
 import { validateEntry } from '../utils/validateEntry.js';
@@ -73,6 +74,61 @@ router.post('/entries', async (req, res, next) => {
         totalAmount: summary.totalAmount,
       },
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/entries/:id', async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ errors: { id: 'Invalid entry id' } });
+    }
+    const doc = await Entry.findById(req.params.id).lean();
+    if (!doc) {
+      return res.status(404).json({ errors: { id: 'Patient entry not found' } });
+    }
+    res.json({ entry: toEntryDto(doc) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/entries/:id', async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ errors: { id: 'Invalid entry id' } });
+    }
+
+    const { errors, value } = validateEntry(req.body);
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    const doc = await Entry.findByIdAndUpdate(req.params.id, value, {
+      new: true,
+      runValidators: true,
+    });
+    if (!doc) {
+      return res.status(404).json({ errors: { id: 'Patient entry not found' } });
+    }
+
+    res.json({ entry: toEntryDto(doc) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/entries/:id', async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ errors: { id: 'Invalid entry id' } });
+    }
+    const doc = await Entry.findByIdAndDelete(req.params.id);
+    if (!doc) {
+      return res.status(404).json({ errors: { id: 'Patient entry not found' } });
+    }
+    res.json({ ok: true, id: String(doc._id) });
   } catch (err) {
     next(err);
   }

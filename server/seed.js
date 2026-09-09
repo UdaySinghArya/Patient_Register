@@ -100,20 +100,15 @@ const rows = [
   },
 ];
 
-const chemistEmail = (process.env.CHEMIST_EMAIL || '').trim().toLowerCase();
-const doctorEmail = (process.env.DOCTOR_EMAIL || '').trim().toLowerCase();
+const chemistEmail = (process.env.CHEMIST_EMAIL || 'chemist-wali@gmail.com').trim().toLowerCase();
+const doctorEmail = (process.env.DOCTOR_EMAIL || 'doctor-wali@gmail.com').trim().toLowerCase();
 const clinicUsers = [
-  chemistEmail && { email: chemistEmail, role: 'Chemist', name: 'Clinic chemist' },
-  doctorEmail && { email: doctorEmail, role: 'Doctor', name: 'Clinic doctor' },
-].filter(Boolean);
-
-if (clinicUsers.length === 0) {
-  console.error('Set CHEMIST_EMAIL and DOCTOR_EMAIL in server/.env before seeding users.');
-  process.exit(1);
-}
+  { email: chemistEmail, role: 'Chemist', name: 'Clinic chemist' },
+  { email: doctorEmail, role: 'Doctor', name: 'Clinic doctor' },
+];
 
 await connectDb();
-await User.deleteMany({});
+await User.collection.drop().catch(() => undefined);
 await User.insertMany(clinicUsers);
 await Entry.deleteMany({});
 await Entry.insertMany(rows);
