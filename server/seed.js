@@ -100,10 +100,17 @@ const rows = [
   },
 ];
 
+const chemistEmail = (process.env.CHEMIST_EMAIL || '').trim().toLowerCase();
+const doctorEmail = (process.env.DOCTOR_EMAIL || '').trim().toLowerCase();
 const clinicUsers = [
-  { phone: '8888888888', pin: '0000', role: 'Chemist', name: 'Clinic chemist' },
-  { phone: '9999999999', pin: '0000', role: 'Doctor', name: 'Clinic doctor' },
-];
+  chemistEmail && { email: chemistEmail, role: 'Chemist', name: 'Clinic chemist' },
+  doctorEmail && { email: doctorEmail, role: 'Doctor', name: 'Clinic doctor' },
+].filter(Boolean);
+
+if (clinicUsers.length === 0) {
+  console.error('Set CHEMIST_EMAIL and DOCTOR_EMAIL in server/.env before seeding users.');
+  process.exit(1);
+}
 
 await connectDb();
 await User.deleteMany({});

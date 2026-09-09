@@ -1,39 +1,62 @@
 import { Router } from 'express';
-import { User, toDirectoryDto, toUserDto } from '../models/User.js';
+import { User, toUserDto } from '../models/User.js';
 
 const router = Router();
+const STATIC_OTP = process.env.STATIC_OTP || '0000';
 
-function digitsOnly(value) {
-  return typeof value === 'string' ? value.replace(/\D/g, '') : '';
+function normalizeEmail(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+function isEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 router.get('/auth/directory', async (_req, res, next) => {
   try {
     const users = await User.find({}).sort({ role: 1 }).lean();
-    res.json({ users: users.map(toDirectoryDto) });
+    res.json({
+      users: users.map((row) => ({
+        email: row.email,
+        role: row.role,
+        name: row.name,
+      })),
+    });
   } catch (err) {
     next(err);
   }
 });
 
-router.post('/auth/login', async (req, res, next) => {
+router.post('/auth/send-otp', async (req, res, next) => {
   try {
-    const phone = digitsOnly(req.body?.phone);
-    const pin = typeof req.body?.pin === 'string' ? req.body.pin.trim() : '';
-    const errors = {};
-
-    if (phone.length !== 10) errors.phone = 'Enter a 10-digit mobile number';
-    if (!/^\d{4}$/.test(pin)) errors.pin = 'PIN must be 4 digits';
-
-    if (Object.keys(errors).length > 0) {
-      return res.status(400).json({ errors });
+    const email = normalizeEmail(req.body?.email);
+    if (!isEmail(email)) {
+      return res.status(400).json({ errors: { email: 'Enter a valid email address' } });
     }
 
-    const user = await User.findOne({ phone }).lean();
-    if (!user || user.pin !== pin) {
-      return res.status(401).json({
-        errors: { pin: 'Mobile number or PIN is incorrect' },
-      });
+    const user = await User.findOne({ email }).lean();
+    if (!user) {
+      return res.status(404).json({ errors: { email: 'This email is not on the clinic list' } });
+    }
+
+    res.json({ ok: true, email });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/auth/verify-otp', async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    const code = typeof req.body?.otp === 'string' ? req.body.otp.trim() : '';
+
+    if (!isEmail(email)) {
+      return res.status(400).json({ errors: { email: 'Enter a valid email address' } });
+    }
+
+    const user = await User.findOne({ email }).lean();
+    if (!user || code !== STATIC_OTP) {
+      return res.status(401).json({ errors: { otp: 'OTP is incorrect. Use 0000' } });
     }
 
     res.json({ user: toUserDto(user) });

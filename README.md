@@ -43,13 +43,21 @@ On Vercel, set `VITE_API_URL` to the Render API origin (no trailing slash), e.g.
 ```
 PORT=4747
 MONGODB_URI=mongodb://127.0.0.1:27017/patient_register
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=your.gmail@gmail.com
+SMTP_PASS=your-16-char-gmail-app-password
+CHEMIST_EMAIL=chemist@gmail.com
+DOCTOR_EMAIL=doctor@gmail.com
 ```
+
+Gmail: 2-Step Verification on karke [App Password](https://myaccount.google.com/apppasswords) banao. Password chat ya git mein mat daalo. Render pe bhi yahi SMTP keys add karo, phir `npm run seed`.
 
 ## Pages
 
 | Path | Who uses it | What it shows |
 |------|-------------|----------------|
-| `/login` | Both | Landing page. Users come from MongoDB `users`. Seed: chemist `8888888888`, doctor `9999999999`, PIN `0000` |
+| `/login` | Both | Email OTP. Users come from MongoDB `users` (`CHEMIST_EMAIL`, `DOCTOR_EMAIL`) |
 | `/` | Doctor and chemist | Today's patients, collection, last entry, Add patient |
 | `/entries/new` | Chemist | Dispensing slip — name, address, medicines, amount |
 | `/report` | Doctor and chemist | Pick a date; that day's list and total |

@@ -9,7 +9,7 @@ export function getSession(): Session | null {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as Session
-    if (!parsed.phone || !parsed.role) return null
+    if (!parsed.email || !parsed.role) return null
     return parsed
   } catch {
     return null

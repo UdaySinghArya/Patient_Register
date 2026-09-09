@@ -1,12 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { ApiError, getClinicDirectory, loginUser, type ClinicUser } from '../api'
+import { ApiError, getClinicDirectory, sendOtp, verifyOtp, type ClinicUser } from '../api'
 import { isLoggedIn, saveSession } from '../auth'
 
 export function Login() {
   const navigate = useNavigate()
-  const [phone, setPhone] = useState('')
-  const [pin, setPin] = useState('')
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState('')
+  const [step, setStep] = useState<'email' | 'otp'>('email')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [directory, setDirectory] = useState<ClinicUser[]>([])
@@ -21,16 +22,30 @@ export function Login() {
     return <Navigate to="/" replace />
   }
 
-  async function onSubmit(event: FormEvent) {
+  async function onSendOtp(event: FormEvent) {
     event.preventDefault()
     setSaving(true)
     setError('')
     try {
-      const { user } = await loginUser(phone, pin)
+      await sendOtp(email)
+      setStep('otp')
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not send OTP. Try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function onVerify(event: FormEvent) {
+    event.preventDefault()
+    setSaving(true)
+    setError('')
+    try {
+      const { user } = await verifyOtp(email, otp)
       saveSession(user)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not sign in. Try again.')
+      setError(err instanceof ApiError ? err.message : 'Could not verify OTP. Try again.')
     } finally {
       setSaving(false)
     }
@@ -44,69 +59,95 @@ export function Login() {
             PR
           </span>
           <h1 className="font-serif text-3xl font-semibold text-ink">Patient Register</h1>
-          <p className="text-sm text-slate">Clinic Pharmacy Ledger · sign in with a saved clinic number</p>
+          <p className="text-sm text-slate">Clinic Pharmacy Ledger · sign in with email OTP</p>
         </div>
 
         <div className="relative overflow-hidden rounded-lg border border-hairline bg-paper p-5 shadow-sm space-y-4">
           <div className="absolute inset-x-0 top-0 h-1 bg-teal" />
-          <form className="space-y-4" onSubmit={onSubmit}>
-            <div className="space-y-1.5">
-              <label htmlFor="phone" className="text-sm font-semibold text-ink">
-                Mobile number
-              </label>
-              <input
-                id="phone"
-                inputMode="numeric"
-                autoComplete="tel"
-                className="w-full h-12 rounded-md border border-line bg-canvas px-3 text-[15px] text-ink tabular outline-none focus:border-teal focus:bg-paper"
-                placeholder="10-digit number"
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))
+          {step === 'email' ? (
+            <form className="space-y-4" onSubmit={onSendOtp}>
+              <div className="space-y-1.5">
+                <label htmlFor="email" className="text-sm font-semibold text-ink">
+                  Clinic email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  className="w-full h-12 rounded-md border border-line bg-canvas px-3 text-[15px] text-ink outline-none focus:border-teal focus:bg-paper"
+                  placeholder="you@gmail.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setError('')
+                  }}
+                />
+              </div>
+              {error ? <p className="text-sm font-medium text-alert">{error}</p> : null}
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full min-h-12 rounded-md bg-teal text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-60"
+              >
+                {saving ? 'Checking…' : 'Continue'}
+              </button>
+            </form>
+          ) : (
+            <form className="space-y-4" onSubmit={onVerify}>
+              <p className="text-sm text-slate">
+                Enter the static OTP for <span className="font-semibold text-ink">{email}</span>
+              </p>
+              <div className="space-y-1.5">
+                <label htmlFor="otp" className="text-sm font-semibold text-ink">
+                  6-digit OTP
+                </label>
+                <input
+                  id="otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  className="w-full h-12 rounded-md border border-line bg-canvas px-3 text-[15px] text-ink tabular outline-none focus:border-teal focus:bg-paper"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => {
+                    setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
+                    setError('')
+                  }}
+                />
+              </div>
+              {error ? <p className="text-sm font-medium text-alert">{error}</p> : null}
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full min-h-12 rounded-md bg-teal text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-60"
+              >
+                {saving ? 'Checking…' : 'Verify and open'}
+              </button>
+              <button
+                type="button"
+                className="w-full text-sm font-semibold text-teal"
+                onClick={() => {
+                  setStep('email')
+                  setOtp('')
                   setError('')
                 }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="pin" className="text-sm font-semibold text-ink">
-                PIN
-              </label>
-              <input
-                id="pin"
-                type="password"
-                inputMode="numeric"
-                autoComplete="off"
-                className="w-full h-12 rounded-md border border-line bg-canvas px-3 text-[15px] text-ink tabular outline-none focus:border-teal focus:bg-paper"
-                placeholder="0000"
-                value={pin}
-                onChange={(e) => {
-                  setPin(e.target.value.replace(/\D/g, '').slice(0, 4))
-                  setError('')
-                }}
-              />
-            </div>
-            {error ? <p className="text-sm font-medium text-alert">{error}</p> : null}
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full min-h-12 rounded-md bg-teal text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-60"
-            >
-              {saving ? 'Signing in…' : 'Open register'}
-            </button>
-          </form>
+              >
+                Use a different email
+              </button>
+            </form>
+          )}
         </div>
 
         {directory.length > 0 ? (
           <div className="rounded-lg border border-hairline bg-paper p-4 text-sm text-slate space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Saved clinic users</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Allowed clinic emails</p>
             {directory.map((user) => (
-              <div key={user.phone} className="flex items-center justify-between gap-3">
+              <div key={user.email} className="flex items-center justify-between gap-3">
                 <span>{user.name}</span>
-                <span className="font-semibold text-ink tabular">{user.phone}</span>
+                <span className="font-semibold text-ink truncate">{user.email}</span>
               </div>
             ))}
             <p className="pt-1 text-xs">
-              PIN: <span className="font-semibold text-teal tabular">0000</span>
+              OTP: <span className="font-semibold text-teal tabular">0000</span>
             </p>
           </div>
         ) : null}

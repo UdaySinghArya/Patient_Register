@@ -129,7 +129,7 @@ export function createEntry(payload: CreateEntryPayload) {
 }
 
 export type ClinicUser = {
-  phone: string
+  email: string
   role: 'Chemist' | 'Doctor'
   name: string
 }
@@ -140,10 +140,17 @@ export function getClinicDirectory() {
   return request<{ users: ClinicUser[] }>('/api/auth/directory')
 }
 
-export function loginUser(phone: string, pin: string) {
-  return request<{ user: AuthUser }>('/api/auth/login', {
+export function sendOtp(email: string) {
+  return request<{ ok: boolean; email: string }>('/api/auth/send-otp', {
     method: 'POST',
-    body: JSON.stringify({ phone, pin }),
+    body: JSON.stringify({ email }),
+  })
+}
+
+export function verifyOtp(email: string, otp: string) {
+  return request<{ user: AuthUser }>('/api/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp }),
   })
 }
 
