@@ -34,6 +34,8 @@ npm run dev
 - API: [http://localhost:4747](http://localhost:4747)
 - Vite proxies `/api` to `http://127.0.0.1:4747`
 
+On Vercel, set `VITE_API_URL` to the Render API origin (no trailing slash), e.g. `https://patient-register-xxxx.onrender.com`, then redeploy. On Render, set `FRONTEND_ORIGIN` to `https://patient-register-chi.vercel.app`.
+
 `npm run seed` clears the register and inserts 12 sample slips (today and yesterday, Asia/Kolkata). Running it again replaces the same set.
 
 ### Environment (`server/.env`)

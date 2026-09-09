@@ -27,6 +27,8 @@ export type CreateEntryResponse = {
   today: { date: string; patientCount: number; totalAmount: number }
 }
 
+const API_BASE = String(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+
 export class ApiError extends Error {
   status: number
   errors: Record<string, string>
@@ -40,10 +42,32 @@ export class ApiError extends Error {
   }
 }
 
+function apiUrl(path: string) {
+  return `${API_BASE}${path}`
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function readErrors(json: unknown, fallback: string): Record<string, string> {
+  if (
+    isRecord(json) &&
+    isRecord(json.errors)
+  ) {
+    const errors: Record<string, string> = {}
+    for (const [key, value] of Object.entries(json.errors)) {
+      if (typeof value === 'string') errors[key] = value
+    }
+    if (Object.keys(errors).length > 0) return errors
+  }
+  return { server: fallback }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
-    res = await fetch(path, {
+    res = await fetch(apiUrl(path), {
       ...init,
       headers: {
         Accept: 'application/json',
@@ -53,36 +77,48 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     })
   } catch {
     throw new ApiError(0, {
-      server: 'Cannot reach the server. Start the API on port 4747 and try again.',
+      server: API_BASE
+        ? 'Cannot reach the clinic API. Check that the Render service is awake.'
+        : 'Cannot reach the server. Start the API on port 4747 and try again.',
     })
   }
 
+  const contentType = res.headers.get('content-type') ?? ''
   let json: unknown = null
-  try {
-    json = await res.json()
-  } catch {
-    json = null
+  if (contentType.includes('application/json')) {
+    try {
+      json = await res.json()
+    } catch {
+      json = null
+    }
   }
 
   if (!res.ok) {
-    const errors =
-      json &&
-      typeof json === 'object' &&
-      json !== null &&
-      'errors' in json &&
-      typeof (json as { errors: unknown }).errors === 'object' &&
-      (json as { errors: unknown }).errors !== null
-        ? ((json as { errors: Record<string, string> }).errors)
-        : { server: `Request failed (${res.status})` }
-    throw new ApiError(res.status, errors)
+    throw new ApiError(res.status, readErrors(json, `Request failed (${res.status})`))
+  }
+
+  if (!isRecord(json)) {
+    throw new ApiError(0, {
+      server: API_BASE
+        ? 'The clinic API did not return data. Set VITE_API_URL to your Render URL and redeploy.'
+        : 'The API did not return data. Is the server running on port 4747?',
+    })
   }
 
   return json as T
 }
 
-export function getEntries(date?: string) {
+function isDayRegister(value: unknown): value is DayRegister {
+  return isRecord(value) && Array.isArray(value.entries)
+}
+
+export async function getEntries(date?: string) {
   const query = date ? `?date=${encodeURIComponent(date)}` : ''
-  return request<DayRegister>(`/api/entries${query}`)
+  const data = await request<DayRegister>(`/api/entries${query}`)
+  if (!isDayRegister(data)) {
+    throw new ApiError(0, { server: 'The clinic API returned an unexpected response.' })
+  }
+  return data
 }
 
 export function createEntry(payload: CreateEntryPayload) {
