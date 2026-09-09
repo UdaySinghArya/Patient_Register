@@ -127,3 +127,26 @@ export function createEntry(payload: CreateEntryPayload) {
     body: JSON.stringify(payload),
   })
 }
+
+export type ClinicUser = {
+  phone: string
+  role: 'Chemist' | 'Doctor'
+  name: string
+}
+
+export type AuthUser = ClinicUser & { id: string }
+
+export function getClinicDirectory() {
+  return request<{ users: ClinicUser[] }>('/api/auth/directory')
+}
+
+export function loginUser(phone: string, pin: string) {
+  return request<{ user: AuthUser }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ phone, pin }),
+  })
+}
+
+export function logoutUser() {
+  return request<{ ok: boolean }>('/api/auth/logout', { method: 'POST' })
+}

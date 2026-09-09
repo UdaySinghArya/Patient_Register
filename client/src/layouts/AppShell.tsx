@@ -94,6 +94,9 @@ export function AppShell() {
             <span className="hidden sm:inline-flex items-center rounded-md bg-canvas px-2 py-1 text-xs font-medium text-slate tabular">
               {dateText}
             </span>
+            <span className="hidden sm:inline text-xs font-medium text-slate truncate max-w-28">
+              {session?.name ?? session?.role}
+            </span>
             <span
               className="flex h-8 w-8 items-center justify-center rounded-full bg-teal text-[11px] font-semibold text-white"
               title={session?.role ?? 'Clinic'}
@@ -103,9 +106,9 @@ export function AppShell() {
             <button
               type="button"
               onClick={onLogout}
-              className="md:hidden min-h-8 rounded-md px-2 text-xs font-semibold text-slate"
+              className="min-h-8 rounded-md border border-line px-2.5 text-xs font-semibold text-slate hover:bg-canvas"
             >
-              Out
+              Logout
             </button>
           </div>
         </div>

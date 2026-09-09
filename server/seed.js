@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import { connectDb } from './db.js';
 import { Entry } from './models/Entry.js';
+import { User } from './models/User.js';
 import { addDaysYmd, istDateTime, todayYmdIST } from './utils/dates.js';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
@@ -99,9 +100,16 @@ const rows = [
   },
 ];
 
+const clinicUsers = [
+  { phone: '8888888888', pin: '0000', role: 'Chemist', name: 'Clinic chemist' },
+  { phone: '9999999999', pin: '0000', role: 'Doctor', name: 'Clinic doctor' },
+];
+
 await connectDb();
+await User.deleteMany({});
+await User.insertMany(clinicUsers);
 await Entry.deleteMany({});
 await Entry.insertMany(rows);
-console.log(`Seeded ${rows.length} entries (today IST ${today}, yesterday ${yesterday}).`);
+console.log(`Seeded ${clinicUsers.length} users and ${rows.length} entries (today IST ${today}, yesterday ${yesterday}).`);
 await mongoose.disconnect();
 process.exit(0);

@@ -1,25 +1,39 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { STATIC_PIN, STATIC_USERS, isLoggedIn, login } from '../auth'
+import { ApiError, getClinicDirectory, loginUser, type ClinicUser } from '../api'
+import { isLoggedIn, saveSession } from '../auth'
 
 export function Login() {
   const navigate = useNavigate()
   const [phone, setPhone] = useState('')
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [directory, setDirectory] = useState<ClinicUser[]>([])
+
+  useEffect(() => {
+    void getClinicDirectory()
+      .then((data) => setDirectory(data.users))
+      .catch(() => setDirectory([]))
+  }, [])
 
   if (isLoggedIn()) {
     return <Navigate to="/" replace />
   }
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    const result = login(phone, pin)
-    if (!result.ok) {
-      setError(result.error)
-      return
+    setSaving(true)
+    setError('')
+    try {
+      const { user } = await loginUser(phone, pin)
+      saveSession(user)
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not sign in. Try again.')
+    } finally {
+      setSaving(false)
     }
-    navigate('/', { replace: true })
   }
 
   return (
@@ -30,7 +44,7 @@ export function Login() {
             PR
           </span>
           <h1 className="font-serif text-3xl font-semibold text-ink">Patient Register</h1>
-          <p className="text-sm text-slate">Clinic Pharmacy Ledger · open with a clinic number</p>
+          <p className="text-sm text-slate">Clinic Pharmacy Ledger · sign in with a saved clinic number</p>
         </div>
 
         <div className="relative overflow-hidden rounded-lg border border-hairline bg-paper p-5 shadow-sm space-y-4">
@@ -74,25 +88,28 @@ export function Login() {
             {error ? <p className="text-sm font-medium text-alert">{error}</p> : null}
             <button
               type="submit"
-              className="w-full min-h-12 rounded-md bg-teal text-sm font-semibold text-white hover:bg-teal-dark"
+              disabled={saving}
+              className="w-full min-h-12 rounded-md bg-teal text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-60"
             >
-              Open register
+              {saving ? 'Signing in…' : 'Open register'}
             </button>
           </form>
         </div>
 
-        <div className="rounded-lg border border-hairline bg-paper p-4 text-sm text-slate space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Clinic numbers</p>
-          {STATIC_USERS.map((user) => (
-            <div key={user.phone} className="flex items-center justify-between gap-3">
-              <span>{user.label}</span>
-              <span className="font-semibold text-ink tabular">{user.phone}</span>
-            </div>
-          ))}
-          <p className="pt-1 text-xs">
-            PIN for both: <span className="font-semibold text-teal tabular">{STATIC_PIN}</span>
-          </p>
-        </div>
+        {directory.length > 0 ? (
+          <div className="rounded-lg border border-hairline bg-paper p-4 text-sm text-slate space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Saved clinic users</p>
+            {directory.map((user) => (
+              <div key={user.phone} className="flex items-center justify-between gap-3">
+                <span>{user.name}</span>
+                <span className="font-semibold text-ink tabular">{user.phone}</span>
+              </div>
+            ))}
+            <p className="pt-1 text-xs">
+              PIN: <span className="font-semibold text-teal tabular">0000</span>
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   )

@@ -36,7 +36,7 @@ npm run dev
 
 On Vercel, set `VITE_API_URL` to the Render API origin (no trailing slash), e.g. `https://patient-register-xxxx.onrender.com`, then redeploy. On Render, set `FRONTEND_ORIGIN` to `https://patient-register-chi.vercel.app`.
 
-`npm run seed` clears the register and inserts 12 sample slips (today and yesterday, Asia/Kolkata). Running it again replaces the same set.
+`npm run seed` clears `users` and `entries`, then inserts 2 clinic users and 12 sample slips (today and yesterday, Asia/Kolkata). Running it again replaces the same set.
 
 ### Environment (`server/.env`)
 
@@ -49,7 +49,7 @@ MONGODB_URI=mongodb://127.0.0.1:27017/patient_register
 
 | Path | Who uses it | What it shows |
 |------|-------------|----------------|
-| `/login` | Both | Landing page. Chemist `9876543210` or Doctor `9123456780`, PIN `0000` |
+| `/login` | Both | Landing page. Users come from MongoDB `users`. Seed: chemist `8888888888`, doctor `9999999999`, PIN `0000` |
 | `/` | Doctor and chemist | Today's patients, collection, last entry, Add patient |
 | `/entries/new` | Chemist | Dispensing slip — name, address, medicines, amount |
 | `/report` | Doctor and chemist | Pick a date; that day's list and total |

@@ -6,6 +6,7 @@ import express from 'express';
 import { connectDb } from './db.js';
 import healthRouter from './routes/health.js';
 import entriesRouter from './routes/entries.js';
+import authRouter from './routes/auth.js';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(rootDir, '.env'), override: true });
@@ -30,6 +31,7 @@ app.use(
 app.use(express.json());
 
 app.use('/api', healthRouter);
+app.use('/api', authRouter);
 app.use('/api', entriesRouter);
 
 app.use((err, _req, res, _next) => {
