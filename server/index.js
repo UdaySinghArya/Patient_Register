@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import express from 'express';
 import { connectDb } from './db.js';
+import { ensureClinicUsers } from './utils/ensureClinicUsers.js';
 import healthRouter from './routes/health.js';
 import entriesRouter from './routes/entries.js';
 import authRouter from './routes/auth.js';
@@ -40,6 +41,7 @@ app.use((err, _req, res, _next) => {
 });
 
 await connectDb();
+await ensureClinicUsers();
 
 app.listen(PORT, () => {
   console.log(`Patient Register API listening on http://localhost:${PORT}`);
