@@ -8,7 +8,11 @@ import entriesRouter from './routes/entries.js';
 const app = express();
 const PORT = Number(process.env.PORT) || 4747;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/],
+  })
+);
 app.use(express.json());
 
 app.use('/api', healthRouter);

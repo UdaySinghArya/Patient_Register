@@ -8,24 +8,34 @@ type State =
 
 export function useDayRegister(date?: string) {
   const [state, setState] = useState<State>({ status: 'loading' })
+  const [tick, setTick] = useState(0)
 
-  const load = useCallback(async () => {
-    setState({ status: 'loading' })
-    try {
-      const data = await getEntries(date)
-      setState({ status: 'ready', data })
-    } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? err.message
-          : 'Could not load the register. Try again.'
-      setState({ status: 'error', message })
-    }
-  }, [date])
+  const retry = useCallback(() => {
+    setTick((n) => n + 1)
+  }, [])
 
   useEffect(() => {
-    void load()
-  }, [load])
+    let cancelled = false
+    setState({ status: 'loading' })
 
-  return { state, retry: load }
+    void (async () => {
+      try {
+        const data = await getEntries(date)
+        if (!cancelled) setState({ status: 'ready', data })
+      } catch (err) {
+        if (cancelled) return
+        const message =
+          err instanceof ApiError
+            ? err.message
+            : 'Could not load the register. Try again.'
+        setState({ status: 'error', message })
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [date, tick])
+
+  return { state, retry }
 }
