@@ -1,8 +1,13 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import { connectDb } from './db.js';
 import { Entry } from './models/Entry.js';
 import { addDaysYmd, istDateTime, todayYmdIST } from './utils/dates.js';
+
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(rootDir, '.env'), override: true });
 
 const today = todayYmdIST();
 const yesterday = addDaysYmd(today, -1);
