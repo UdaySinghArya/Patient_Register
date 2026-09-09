@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { getSession, logout } from '../auth'
 import { IconNewEntry, IconRegister, IconReport } from '../components/NavIcons'
 
 const NAV = [
@@ -33,6 +34,13 @@ function navClass(isActive: boolean, variant: 'side' | 'bottom') {
 
 export function AppShell() {
   const dateText = todayLabel()
+  const navigate = useNavigate()
+  const session = getSession()
+
+  function onLogout() {
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="min-h-dvh bg-canvas text-ink">
@@ -59,7 +67,16 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        <p className="mt-auto px-4 pb-4 text-xs text-muted">One clinic · chemist and doctor</p>
+        <div className="mt-auto px-4 pb-4 space-y-2">
+          <p className="text-xs text-muted">One clinic · chemist and doctor</p>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="w-full min-h-10 rounded-md border border-line text-xs font-semibold text-slate hover:bg-canvas"
+          >
+            Sign out
+          </button>
+        </div>
       </aside>
 
       <header className="fixed top-0 inset-x-0 z-30 h-16 border-b border-hairline bg-paper/90 backdrop-blur-md md:left-56">
@@ -79,10 +96,17 @@ export function AppShell() {
             </span>
             <span
               className="flex h-8 w-8 items-center justify-center rounded-full bg-teal text-[11px] font-semibold text-white"
-              title="Clinic doctor"
+              title={session?.role ?? 'Clinic'}
             >
-              DR
+              {session?.role === 'Chemist' ? 'CH' : 'DR'}
             </span>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="md:hidden min-h-8 rounded-md px-2 text-xs font-semibold text-slate"
+            >
+              Out
+            </button>
           </div>
         </div>
       </header>

@@ -13,9 +13,18 @@ dotenv.config({ path: path.join(rootDir, '.env'), override: true });
 const app = express();
 const PORT = Number(process.env.PORT) || 4747;
 
+const frontendOrigins = (process.env.FRONTEND_ORIGIN ?? '')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/],
+    origin: [
+      /^http:\/\/localhost:\d+$/,
+      /^http:\/\/127\.0\.0\.1:\d+$/,
+      ...frontendOrigins,
+    ],
   })
 );
 app.use(express.json());

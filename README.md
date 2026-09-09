@@ -2,7 +2,7 @@
 
 A small clinic pharmacy ledger for one chemist and one doctor. The chemist records each patient (name, address, medicines given, amount). Both can see today's list and rupee total, or open a past day.
 
-There is no login, stock, GST, appointments, or payments.
+There is no real account system, stock, GST, appointments, or payments. The first screen is a simple clinic gate: pick a static mobile number and PIN `0000`.
 
 ## Prerequisites
 
@@ -47,6 +47,7 @@ MONGODB_URI=mongodb://127.0.0.1:27017/patient_register
 
 | Path | Who uses it | What it shows |
 |------|-------------|----------------|
+| `/login` | Both | Landing page. Chemist `9876543210` or Doctor `9123456780`, PIN `0000` |
 | `/` | Doctor and chemist | Today's patients, collection, last entry, Add patient |
 | `/entries/new` | Chemist | Dispensing slip — name, address, medicines, amount |
 | `/report` | Doctor and chemist | Pick a date; that day's list and total |
