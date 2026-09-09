@@ -1,13 +1,57 @@
-import type { Entry } from '../api'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { deleteEntry, type Entry } from '../api'
 import { formatRupees, formatTimeIST } from '../lib/format'
 
 type Props = {
   entries: Entry[]
+  onChanged?: () => void
 }
 
-export function EntryList({ entries }: Props) {
+export function EntryList({ entries, onChanged }: Props) {
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  async function onDelete(entry: Entry) {
+    const ok = window.confirm(`Delete ${entry.patientName}'s slip? This cannot be undone.`)
+    if (!ok) return
+    setBusyId(entry.id)
+    setError(null)
+    try {
+      await deleteEntry(entry.id)
+      onChanged?.()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not delete this entry.')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  function Actions({ entry }: { entry: Entry }) {
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          to={`/entries/${entry.id}/edit`}
+          className="inline-flex min-h-9 items-center rounded-md border border-line px-2.5 text-xs font-semibold text-teal hover:bg-sage"
+        >
+          Edit
+        </Link>
+        <button
+          type="button"
+          disabled={busyId === entry.id}
+          onClick={() => void onDelete(entry)}
+          className="inline-flex min-h-9 items-center rounded-md border border-alert/30 px-2.5 text-xs font-semibold text-alert hover:bg-alert-bg disabled:opacity-60"
+        >
+          {busyId === entry.id ? 'Deleting…' : 'Delete'}
+        </button>
+      </div>
+    )
+  }
+
   return (
     <>
+      {error ? <p className="text-sm font-medium text-alert">{error}</p> : null}
+
       <div className="md:hidden space-y-3">
         {entries.map((entry, index) => (
           <article
@@ -37,6 +81,9 @@ export function EntryList({ entries }: Props) {
               </div>
             </div>
             <p className="mt-3 rounded-md bg-canvas px-3 py-2 text-sm text-ink">{entry.medicines}</p>
+            <div className="mt-3">
+              <Actions entry={entry} />
+            </div>
           </article>
         ))}
       </div>
@@ -51,6 +98,7 @@ export function EntryList({ entries }: Props) {
               <th className="px-3 py-2.5">Medicines</th>
               <th className="px-3 py-2.5 text-right">Amount</th>
               <th className="px-3 py-2.5">Status</th>
+              <th className="px-3 py-2.5">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -72,6 +120,9 @@ export function EntryList({ entries }: Props) {
                   <span className="inline-block rounded bg-sage px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-teal-ink">
                     Dispensed
                   </span>
+                </td>
+                <td className="px-3 py-3">
+                  <Actions entry={entry} />
                 </td>
               </tr>
             ))}

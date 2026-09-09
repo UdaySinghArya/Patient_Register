@@ -81,6 +81,9 @@ Then open `/` — the new patient should appear and today's total should increas
 | GET | `/api/health` | `{ ok: true }` |
 | GET | `/api/entries?date=YYYY-MM-DD` | Missing `date` → today IST. Newest first. |
 | POST | `/api/entries` | Body: `{ patientName, address, medicines, amount }` |
+| GET | `/api/entries/:id` | One slip |
+| PUT | `/api/entries/:id` | Update name, address, medicines, amount |
+| DELETE | `/api/entries/:id` | Remove a slip |
 
 ## Backend checks
 

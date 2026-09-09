@@ -72,7 +72,7 @@ export function TodayRegister() {
       {empty ? (
         <StatusPanel empty="No patients recorded today. When the chemist saves a slip, it will appear here." />
       ) : (
-        <EntryList entries={data.entries} />
+        <EntryList entries={data.entries} onChanged={retry} />
       )}
 
       <div className="rounded-lg border border-hairline bg-paper px-4 py-3 flex items-center justify-between shadow-sm">

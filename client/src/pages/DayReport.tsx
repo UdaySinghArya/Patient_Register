@@ -82,7 +82,7 @@ export function DayReport() {
           {state.data.entries.length === 0 ? (
             <StatusPanel empty="No entries on this date." />
           ) : (
-            <EntryList entries={state.data.entries} />
+            <EntryList entries={state.data.entries} onChanged={retry} />
           )}
         </>
       ) : null}

@@ -128,6 +128,23 @@ export function createEntry(payload: CreateEntryPayload) {
   })
 }
 
+export function getEntry(id: string) {
+  return request<{ entry: Entry }>(`/api/entries/${id}`)
+}
+
+export function updateEntry(id: string, payload: CreateEntryPayload) {
+  return request<{ entry: Entry }>(`/api/entries/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function deleteEntry(id: string) {
+  return request<{ ok: boolean; id: string }>(`/api/entries/${id}`, {
+    method: 'DELETE',
+  })
+}
+
 export type ClinicUser = {
   email: string
   role: 'Chemist' | 'Doctor'
